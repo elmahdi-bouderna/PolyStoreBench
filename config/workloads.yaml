@@ -1,0 +1,30 @@
+workloads:
+  - name: insert_10k
+    operation: insert
+    dataset_size: 10000
+    repetitions: 3
+    concurrency_level: 1
+
+  - name: insert_100k
+    operation: insert
+    dataset_size: 100000
+    repetitions: 3
+    concurrency_level: 1
+
+  - name: read_10k
+    operation: read
+    dataset_size: 10000
+    repetitions: 3
+    concurrency_level: 1
+
+  - name: read_100k
+    operation: read
+    dataset_size: 100000
+    repetitions: 3
+    concurrency_level: 1
+
+  - name: read_10k_concurrent_10
+    operation: read
+    dataset_size: 10000
+    repetitions: 3
+    concurrency_level: 10

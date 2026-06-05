@@ -1,0 +1,35 @@
+mongodb:
+  host: localhost
+  port: 27017
+  username: admin
+  password: admin123
+  database: polystorebench
+
+redis:
+  host: localhost
+  port: 6379
+  db: 0
+
+cassandra:
+  host: localhost
+  port: 9042
+  keyspace: polystorebench
+
+postgres:
+  host: localhost
+  port: 5432
+  username: psb_user
+  password: psb_pass
+  database: polystorebench
+
+hadoop:
+  hdfs_url: hdfs://127.0.0.1:8020
+  namenode_host: 127.0.0.1
+  namenode_port: 8020
+
+hive:
+  host: 127.0.0.1
+  port: 10000
+  username: hive
+  database: default
+  

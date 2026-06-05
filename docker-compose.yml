@@ -1,0 +1,145 @@
+services:
+
+  mongodb:
+    image: mongo:7
+    container_name: psb_mongodb
+    ports:
+      - "27018:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: admin123
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7
+    container_name: psb_redis
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  postgres:
+    image: postgres:15
+    container_name: psb_postgres
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: psb_user
+      POSTGRES_PASSWORD: psb_pass
+      POSTGRES_DB: polystorebench
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U psb_user -d polystorebench"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  # Hive metastore PostgreSQL — must be pg11 because Hive 2.3 / DataNucleus 4.2
+  # queries pg_am.amcanorder which was removed in PostgreSQL 9.6+
+  hive-postgres:
+    image: postgres:9.5
+    container_name: psb_hive_postgres
+    ports:
+      - "5433:5432"
+    environment:
+      POSTGRES_USER: hive
+      POSTGRES_PASSWORD: hive
+      POSTGRES_DB: metastore
+      POSTGRES_HOST_AUTH_METHOD: md5
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U hive -d metastore"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - hive_postgres_data:/var/lib/postgresql/data
+
+
+  cassandra:
+    image: cassandra:4.1
+    container_name: psb_cassandra
+    ports:
+      - "9042:9042"
+    environment:
+      CASSANDRA_CLUSTER_NAME: psb-cluster
+      CASSANDRA_DC: dc1
+      CASSANDRA_ENDPOINT_SNITCH: GossipingPropertyFileSnitch
+    healthcheck:
+      test: ["CMD", "cqlsh", "-e", "describe keyspaces"]
+      interval: 30s
+      timeout: 10s
+      retries: 10
+      start_period: 60s
+    volumes:
+      - cassandra_data:/var/lib/cassandra
+
+
+
+  namenode:
+    image: bde2020/hadoop-namenode:2.0.0-hadoop3.2.1-java8
+    container_name: psb_namenode
+    environment:
+      CLUSTER_NAME: psb-hadoop
+      CORE_CONF_fs_defaultFS: hdfs://namenode:8020
+    ports:
+      - "9870:9870"
+      - "8020:8020"
+    volumes:
+      - namenode_data:/hadoop/dfs/name
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9870"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  datanode:
+    image: bde2020/hadoop-datanode:2.0.0-hadoop3.2.1-java8
+    container_name: psb_datanode
+    environment:
+      SERVICE_PRECONDITION: "namenode:9870"
+      CORE_CONF_fs_defaultFS: hdfs://namenode:8020
+    depends_on:
+      - namenode
+    ports:
+      - "9864:9864"
+    volumes:
+      - datanode_data:/hadoop/dfs/data
+
+  hive-server:
+    image: bde2020/hive:2.3.2-postgresql-metastore
+    container_name: psb_hive
+    restart: on-failure
+    environment:
+      SERVICE_PRECONDITION: "namenode:9870 hive-postgres:5432"
+      CORE_CONF_fs_defaultFS: hdfs://namenode:8020
+      HIVE_SITE_CONF_javax_jdo_option_ConnectionURL: "jdbc:postgresql://hive-postgres:5432/metastore"
+      HIVE_SITE_CONF_javax_jdo_option_ConnectionDriverName: "org.postgresql.Driver"
+      HIVE_SITE_CONF_javax_jdo_option_ConnectionUserName: "hive"
+      HIVE_SITE_CONF_javax_jdo_option_ConnectionPassword: "hive"
+      HIVE_SITE_CONF_datanucleus_autoCreateSchema: "true"
+      HIVE_SITE_CONF_datanucleus_fixedDatastore: "false"
+      HIVE_SITE_CONF_datanucleus_autoCreateTables: "true"
+      HIVE_SITE_CONF_datanucleus_schema_autoCreateAll: "true"
+      HIVE_SITE_CONF_hive_metastore_schema_verification: "false"
+
+    depends_on:
+      - namenode
+      - hive-postgres
+    ports:
+      - "10000:10000"
+      - "10002:10002"
+
+volumes:
+  namenode_data:
+  datanode_data:
+  postgres_data:
+  cassandra_data:
+  hive_postgres_data:

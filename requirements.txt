@@ -1,0 +1,16 @@
+pymongo
+redis
+cassandra-driver
+pyspark
+impyla
+thrift
+thrift-sasl
+sqlalchemy
+psutil
+pandas
+plotly
+streamlit
+pyyaml
+psycopg2-binary
+faker
+numpy
