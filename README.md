@@ -355,7 +355,7 @@ Every benchmark run captures:
 
 | Name | Role |
 |------|------|
-| **EL MAHDI BOUDERNA** | Lead Developer |
+| **EL MAHDI BOUDERNA** | Developer |
 | **KAWTER ALOUANE** | Developer |
 | **YOUSSEF NAFAE** | Developer |
 
