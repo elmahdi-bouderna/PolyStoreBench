@@ -63,7 +63,8 @@ polystorebench/
 │
 ├── main.py                  # CLI entry point
 │
-├── adapters/                # Database adapters (one per system)
+├── adapters/         # Database adapters (one per system)
+    ├── data_loader.py
 │   ├── base_adapter.py      # Abstract base class
 │   ├── mongodb_adapter.py
 │   ├── redis_adapter.py
